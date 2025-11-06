@@ -1,6 +1,7 @@
 package com.example.weeklymealplannergpt.service;
 
-import com.example.weeklymealplannergpt.repository.UserRepository;
+import com.example.weeklymealplannergpt.model.Consumer;
+import com.example.weeklymealplannergpt.repository.ConsumerRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,17 +10,21 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class UserServiceTest {
+public class ConsumerServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private ConsumerRepository consumerRepository;
 
-    private User user;
+    private Consumer consumer;
 
     @BeforeAll
     public void beforeAll() {
@@ -28,19 +33,22 @@ public class UserServiceTest {
 
     @BeforeEach
     void beforeEach() {
-        user = new User("test@example.com");
-        userService.save(user);
+        consumer = new Consumer(UUID.randomUUID(), "test@example.com", "John Doe", "OMNIVORE", Set.of("Peanuts", "Dairy"));
+        consumerRepository.save(consumer);
     }
 
     @Test
-    public void userRepositoryReturnsEmail(){
-        when(userRepository.findByEmail()).thenReturn(Optional.of(User));
+    public void consumerRepositoryReturnsEmail(){
+        //Arrange
+        when(consumerRepository.findByEmail("test@example.com")).thenReturn(Optional.of(consumer));
 
-        Optional<User> result = userService.findByEmail("test@example.com");
+        //Act
+        Optional<Consumer> result = consumerRepository.findByEmail("test@example.com");
 
+        //Assert
         assertTrue(result.isPresent());
         assertEquals("test@example.com", result.get().getEmail());
-        verify(userRepository).findByEmail("test@example.com");
+        verify(consumerRepository).findByEmail("test@example.com");
     }
 
 

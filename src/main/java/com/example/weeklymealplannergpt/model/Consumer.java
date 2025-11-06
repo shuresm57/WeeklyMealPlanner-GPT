@@ -11,13 +11,13 @@ import java.util.UUID;
 
 @Entity
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
-public class User {
+public class Consumer {
 
     @Id
     @GeneratedValue
     private UUID id;
 
-    private String email, name, dietType;
+    private String email, name, dietType, dislikes;
 
     @ElementCollection
     private Set<String> allergies;
