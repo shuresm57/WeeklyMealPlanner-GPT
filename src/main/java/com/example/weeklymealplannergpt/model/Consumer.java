@@ -17,9 +17,12 @@ public class Consumer {
     @GeneratedValue
     private UUID id;
 
-    private String email, name, dietType, dislikes;
+    private String email, name, dietType;
 
     @ElementCollection
-    private Set<String> allergies;
+    private Set<String> allergies, dislikes;
 
+    @ManyToOne
+    @JoinColumn(name = "weekly_meal_plan_id")
+    private WeeklyMealPlan weeklyMealPlan;
 }

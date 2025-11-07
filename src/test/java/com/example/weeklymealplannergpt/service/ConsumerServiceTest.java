@@ -1,6 +1,7 @@
 package com.example.weeklymealplannergpt.service;
 
 import com.example.weeklymealplannergpt.model.Consumer;
+import com.example.weeklymealplannergpt.model.WeeklyMealPlan;
 import com.example.weeklymealplannergpt.repository.ConsumerRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +34,7 @@ public class ConsumerServiceTest {
 
     @BeforeEach
     void beforeEach() {
-        consumer = new Consumer(UUID.randomUUID(), "test@example.com", "John Doe", "OMNIVORE", Set.of("Peanuts", "Dairy"));
+        consumer = new Consumer(UUID.randomUUID(), "test@example.com", "John Doe", "OMNIVORE", Set.of("Peanuts", "Dairy"), Set.of("Raisins"), null);
         consumerRepository.save(consumer);
     }
 
