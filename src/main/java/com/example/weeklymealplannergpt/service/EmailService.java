@@ -1,6 +1,7 @@
 package com.example.weeklymealplannergpt.service;
 
 import com.example.weeklymealplannergpt.model.Consumer;
+import com.example.weeklymealplannergpt.model.WeeklyMealPlan;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.AllArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 
 @Service
@@ -18,20 +20,13 @@ public class EmailService {
 
     private final JavaMailSender javaMailSender;
 
-    private ThymeleafTemplateEngine templateEngine;
+    private SpringTemplateEngine templateEngine;
 
-    public void sendEmail(String to, String subject, String text) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(text);
-
-        javaMailSender.send(message);
-    }
-
-    public void sendWeeklyMeanPlan(Consumer consumer, WeeklyMealPlan weeklyMealPlan) throws MessagingException {
+    public void sendWeeklyMeanPlan(Consumer consumer) throws MessagingException {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+        WeeklyMealPlan weeklyMealPlan = consumer.getWeeklyMealPlan();
 
         try {
             helper.setTo(consumer.getEmail());
