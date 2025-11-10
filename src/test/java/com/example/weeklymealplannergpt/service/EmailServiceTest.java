@@ -2,7 +2,7 @@ package com.example.weeklymealplannergpt.service;
 
 import com.example.weeklymealplannergpt.model.Consumer;
 import com.example.weeklymealplannergpt.model.Meal;
-import com.example.weeklymealplannergpt.model.WeeklyMealPlan;
+import com.example.weeklymealplannergpt.service.email.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
@@ -12,12 +12,10 @@ import org.junit.jupiter.api.TestInstance;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -52,12 +50,6 @@ public class EmailServiceTest {
         when(templateEngine.process(eq("weekly-meal-plan"), any(Context.class)))
                 .thenReturn("<html><body>Your meal plan</body></html>");
 
-        WeeklyMealPlan weeklyMealPlan = new WeeklyMealPlan(
-                1L,
-                LocalDate.now(),
-                List.of(meal)
-        );
-
         Consumer consumer = new Consumer(
                 UUID.randomUUID(),
                 "test@example.com",
@@ -65,7 +57,7 @@ public class EmailServiceTest {
                 "OMNIVORE",
                 Set.of("Peanuts", "Dairy"),
                 Set.of("Raisins"),
-                weeklyMealPlan
+                null
         );
 
         // Act
