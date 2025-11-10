@@ -35,4 +35,4 @@ build/
 # Environment Variables (NEVER COMMIT!)
 .env
 .env.*
-!.env.example
+!.env.exampleapplication-dev.properties

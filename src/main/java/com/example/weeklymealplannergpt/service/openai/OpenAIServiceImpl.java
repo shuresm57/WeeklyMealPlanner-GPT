@@ -1,10 +1,9 @@
-package com.example.weeklymealplannergpt.service;
+package com.example.weeklymealplannergpt.service.openai;
 
 import com.example.weeklymealplannergpt.dto.OpenAIRequest;
 import com.example.weeklymealplannergpt.dto.OpenAIResponse;
 import com.example.weeklymealplannergpt.model.Consumer;
 import com.example.weeklymealplannergpt.model.Meal;
-import com.example.weeklymealplannergpt.model.WeeklyMealPlan;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -39,9 +38,12 @@ public class OpenAIServiceImpl implements OpenAIService {
     }
 
 
-    public WeeklyMealPlan generateWeeklyMealPlan(Consumer consumer) {
+    public List<Meal> generateMealPlan(Consumer consumer) {
 
         String prompt = String.format("""
+                        
+                        You MUST respond ONLY with valid JSON. No markdown, no code blocks, just pure JSON starting with { and ending with }."
+                        
                         User preferences:
                         - Allergies: %s
                         - Diet: %s (vegetarian/vegan/omnivore)
@@ -72,6 +74,8 @@ public class OpenAIServiceImpl implements OpenAIService {
                         - Balanced nutrition
                         - Variety throughout the week
                         - Provide exactly 5 dinner meals
+                        
+                        IMPORTANT: Respond with ONLY the JSON object. No markdown code blocks (```), no explanations, just the pure JSON.
                         """,
                 consumer.getAllergies(),
                 consumer.getDietType(),
@@ -81,12 +85,12 @@ public class OpenAIServiceImpl implements OpenAIService {
         return getMealPlanFromPrompt(prompt);
     }
 
-    private WeeklyMealPlan getMealPlanFromPrompt(String prompt) {
+    private List<Meal> getMealPlanFromPrompt(String prompt) {
         try {
             OpenAIRequest request = new OpenAIRequest();
             request.setModel(model);
             request.setTemperature(0.7);
-            request.setMax_tokens(2000);
+            request.setMax_tokens(1000);
             
             List<OpenAIRequest.Message> messages = new ArrayList<>();
             messages.add(new OpenAIRequest.Message("system", 
@@ -119,11 +123,10 @@ public class OpenAIServiceImpl implements OpenAIService {
             logger.error("Error calling OpenAI API: ", e);
         }
 
-        return new WeeklyMealPlan();
+        return new ArrayList<>();
     }
 
-    private WeeklyMealPlan parseMealPlanResponse(String jsonContent) {
-        WeeklyMealPlan weeklyMealPlan = new WeeklyMealPlan();
+    private List<Meal> parseMealPlanResponse(String jsonContent) {
         List<Meal> meals = new ArrayList<>();
 
         try {
@@ -157,14 +160,12 @@ public class OpenAIServiceImpl implements OpenAIService {
                     
                     meals.add(meal);
                 }
-                
-                weeklyMealPlan.setMeals(meals);
             }
 
         } catch (JsonProcessingException e) {
             logger.error("Error parsing meal plan JSON: ", e);
         }
 
-        return weeklyMealPlan;
+        return meals;
     }
 }
