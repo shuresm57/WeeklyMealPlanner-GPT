@@ -1,4 +1,4 @@
-package com.example.weeklymealplannergpt.service;
+package com.example.weeklymealplannergpt.service.email;
 
 import com.example.weeklymealplannergpt.model.Consumer;
 import jakarta.mail.MessagingException;
