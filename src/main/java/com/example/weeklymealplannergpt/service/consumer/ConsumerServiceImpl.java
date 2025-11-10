@@ -1,4 +1,4 @@
-package com.example.weeklymealplannergpt.service;
+package com.example.weeklymealplannergpt.service.consumer;
 
 import com.example.weeklymealplannergpt.model.Consumer;
 import com.example.weeklymealplannergpt.repository.ConsumerRepository;
@@ -23,13 +23,14 @@ public class ConsumerServiceImpl implements ConsumerService {
     }
 
     @Override
-    public Optional<Consumer> findById(UUID id) {
-        return consumerRepository.findById(id);
+    public Consumer findByEmail(String email) {
+        return consumerRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Consumer not found"));
     }
 
     @Override
-    public Optional<Consumer> findByEmail(String email) {
-        return consumerRepository.findByEmail(email);
+    public Optional<Consumer> findById(UUID id) {
+        return consumerRepository.findById(id);
     }
 
     @Override

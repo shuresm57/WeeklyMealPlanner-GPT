@@ -1,4 +1,4 @@
-package com.example.weeklymealplannergpt.service;
+package com.example.weeklymealplannergpt.service.consumer;
 
 import com.example.weeklymealplannergpt.model.Consumer;
 
@@ -8,8 +8,8 @@ import java.util.UUID;
 
 public interface ConsumerService {
     Consumer save(Consumer consumer);
+    Consumer findByEmail(String email);
     Optional<Consumer> findById(UUID id);
-    Optional<Consumer> findByEmail(String email);
     List<Consumer> findAll();
     void deleteById(UUID id);
     boolean existsById(UUID id);

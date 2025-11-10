@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
@@ -19,7 +20,11 @@ public class WeeklyMealPlan {
 
     private LocalDate weekStartDate;
 
-    @OneToMany
+    @ManyToOne
+    @JoinColumn(name = "consumer_id")
+    private Consumer consumer;
+
+    @OneToMany(cascade = CascadeType.ALL)
     private List<Meal> meals;
 
 }
