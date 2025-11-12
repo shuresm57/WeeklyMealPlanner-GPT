@@ -6,7 +6,8 @@ on:
     paths:
       - '**.js'
       - '**.java'
-      - '**.py'
+      - '**.html'
+      - '**.css'
     types: [opened, synchronize, reopened]
   push:
     branches: [development]
@@ -34,7 +35,7 @@ jobs:
         env:
           DEFAULT_BRANCH: development
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_ALL_CODEBASE: true
           LOG_LEVEL: WARN
 
       - name: Comment on PR with linting results
