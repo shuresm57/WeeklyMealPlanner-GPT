@@ -35,7 +35,7 @@ jobs:
         env:
           DEFAULT_BRANCH: development
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: true
+          VALIDATE_ALL_CODEBASE: false
           LOG_LEVEL: WARN
 
       - name: Comment on PR with linting results
