@@ -1,7 +1,6 @@
 package com.example.weeklymealplannergpt.repository;
 
 import com.example.weeklymealplannergpt.model.Consumer;
-import org.apache.catalina.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

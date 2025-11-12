@@ -1,11 +1,26 @@
 package com.example.weeklymealplannergpt.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
+/**
+ * findByConsumerIdAndWeekStartDate() - bruges til at hente current week plan (composite index optimerer dette)
+ * findByConsumerIdOrderByWeekStartDateDesc() - bruges til history (consumer_id index + weekStartDate sort)
+ */
+@Table(name = "weekly_meal_plan", indexes = {
+        @Index(name = "idx_consumer_week", columnList = "consumer_id, week_start_date"),
+        @Index(name = "idx_consumer_id", columnList = "consumer_id"),
+        @Index(name = "idx_week_start_date", columnList = "week_start_date")
+})
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class WeeklyMealPlan {
 
     @Id
@@ -14,6 +29,11 @@ public class WeeklyMealPlan {
 
     private LocalDate weekStartDate;
 
-    @OneToMany
-    private List<Meal> days;
+    @ManyToOne
+    @JoinColumn(name = "consumer_id")
+    private Consumer consumer;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<Meal> meals;
+
 }
