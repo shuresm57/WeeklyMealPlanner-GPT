@@ -32,4 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 
+# Environment Variables (NEVER COMMIT!)
 .env
+.env.*
+!.env.exampleapplication-dev.properties
