@@ -10,6 +10,12 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
+/**
+ * MealCacheService.getMealByName() bruger mealName til lookup. Uden index = O(n) scan.
+ */
+@Table(name = "meal", indexes = {
+        @Index(name = "idx_meal_name", columnList = "mealName")
+})
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class Meal {
 
