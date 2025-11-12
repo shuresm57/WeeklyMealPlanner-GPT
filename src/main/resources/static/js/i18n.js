@@ -54,16 +54,34 @@ function updateTranslations() {
     });
 }
 
-// Language toggle
-function toggleLanguage() {
-    currentLang = currentLang === 'en' ? 'da' : 'en';
+// Set language
+function setLanguage(lang) {
+    currentLang = lang;
     document.documentElement.setAttribute('lang', currentLang);
     localStorage.setItem('lang', currentLang);
     updateTranslations();
+    updateLanguageButtons();
+}
+
+// Update language button states
+function updateLanguageButtons() {
+    const enBtn = document.getElementById('langEN');
+    const daBtn = document.getElementById('langDA');
     
-    const langBtn = document.getElementById('langToggle');
-    if (langBtn) {
-        langBtn.textContent = currentLang === 'en' ? 'DK' : 'EN';
+    if (enBtn && daBtn) {
+        if (currentLang === 'en') {
+            enBtn.classList.add('active');
+            enBtn.classList.remove('btn-outline-secondary');
+            enBtn.classList.add('btn-secondary');
+            daBtn.classList.remove('active', 'btn-secondary');
+            daBtn.classList.add('btn-outline-secondary');
+        } else {
+            daBtn.classList.add('active');
+            daBtn.classList.remove('btn-outline-secondary');
+            daBtn.classList.add('btn-secondary');
+            enBtn.classList.remove('active', 'btn-secondary');
+            enBtn.classList.add('btn-outline-secondary');
+        }
     }
 }
 

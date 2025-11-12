@@ -12,6 +12,12 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
+/**
+ * ConsumerRepository.findByEmail() kaldes ved hver login via OAuth2. Uden index = fuld tabel scan.
+ */
+@Table(name = "consumer", indexes = {
+        @Index(name = "idx_consumer_mail", columnList = "email", unique = true)
+})
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class Consumer {
 
