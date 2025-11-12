@@ -1,7 +1,7 @@
 package com.example.weeklymealplannergpt.service;
 
 import com.example.weeklymealplannergpt.dto.TheMealDbResponse;
-import com.example.weeklymealplannergpt.service.mealplan.TheMealDbService;
+import com.example.weeklymealplannergpt.service.mealplan.TheMealDbServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,10 +16,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
-class TheMealDbServiceTest {
+class TheMealDbServiceImplTest {
 
     @Autowired
-    private TheMealDbService theMealDbService;
+    private TheMealDbServiceImpl theMealDbServiceImpl;
 
     @MockBean
     private RestTemplate restTemplate;
@@ -38,7 +38,7 @@ class TheMealDbServiceTest {
         when(restTemplate.getForObject(anyString(), eq(TheMealDbResponse.class)))
                 .thenReturn(response);
 
-        List<TheMealDbResponse.MealDto> meals = theMealDbService.searchMealsByName("Chicken");
+        List<TheMealDbResponse.MealDto> meals = theMealDbServiceImpl.searchMealsByName("Chicken");
 
         assertNotNull(meals);
         assertEquals(1, meals.size());
@@ -57,7 +57,7 @@ class TheMealDbServiceTest {
         when(restTemplate.getForObject(anyString(), eq(TheMealDbResponse.class)))
                 .thenReturn(response);
 
-        List<TheMealDbResponse.MealDto> meals = theMealDbService.searchMealsByIngredient("tomato");
+        List<TheMealDbResponse.MealDto> meals = theMealDbServiceImpl.searchMealsByIngredient("tomato");
 
         assertNotNull(meals);
         assertEquals(1, meals.size());

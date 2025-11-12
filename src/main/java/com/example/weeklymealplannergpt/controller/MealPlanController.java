@@ -1,5 +1,6 @@
 package com.example.weeklymealplannergpt.controller;
 
+import com.example.weeklymealplannergpt.dto.MealPlanResponse;
 import com.example.weeklymealplannergpt.model.Consumer;
 import com.example.weeklymealplannergpt.model.WeeklyMealPlan;
 import com.example.weeklymealplannergpt.service.consumer.ConsumerService;
@@ -11,6 +12,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/mealplan")
@@ -23,10 +25,17 @@ public class MealPlanController {
     private ConsumerService consumerService;
 
     @PostMapping("/generate")
-    public WeeklyMealPlan generateMealPlan(@AuthenticationPrincipal OAuth2User principal) {
+    public MealPlanResponse generateMealPlan(
+            @AuthenticationPrincipal OAuth2User principal,
+            @RequestParam(defaultValue = "monthly") String type) {
         String email = principal.getAttribute("email");
         Consumer consumer = consumerService.findByEmail(email);
-        return mealPlanService.generateWeeklyMealPlan(consumer);
+        
+        if ("weekly".equalsIgnoreCase(type)) {
+            return mealPlanService.generateWeeklyMealPlan(consumer);
+        } else {
+            return mealPlanService.generateMonthlyMealPlan(consumer);
+        }
     }
 
     @GetMapping("/current")
@@ -46,5 +55,21 @@ public class MealPlanController {
         String email = principal.getAttribute("email");
         Consumer consumer = consumerService.findByEmail(email);
         return mealPlanService.getPlanHistory(consumer.getId());
+    }
+    
+    @PostMapping("/{mealPlanId}/email")
+    public ResponseEntity<Map<String, String>> sendMealPlanByEmail(
+            @AuthenticationPrincipal OAuth2User principal,
+            @PathVariable Long mealPlanId) {
+        String email = principal.getAttribute("email");
+        Consumer consumer = consumerService.findByEmail(email);
+        
+        try {
+            mealPlanService.sendMealPlanByEmail(consumer.getId(), mealPlanId);
+            return ResponseEntity.ok(Map.of("message", "Email sent successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "Failed to send email: " + e.getMessage()));
+        }
     }
 }
