@@ -8,16 +8,16 @@ on:
       - '**.java'
       - '**.py'
     types: [opened, synchronize, reopened]
+  push:
+    branches: [development]
 
 jobs:
   super-linter:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout code
         uses: actions/checkout@v4
-
 
       - name: Run Super Linter
         uses: github/super-linter@v5
