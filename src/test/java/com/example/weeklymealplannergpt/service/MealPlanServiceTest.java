@@ -4,7 +4,7 @@ import com.example.weeklymealplannergpt.model.Consumer;
 import com.example.weeklymealplannergpt.model.WeeklyMealPlan;
 import com.example.weeklymealplannergpt.repository.WeeklyMealPlanRepository;
 import com.example.weeklymealplannergpt.service.mealplan.MealPlanService;
-import com.example.weeklymealplannergpt.service.mealplan.TheMealDbService;
+import com.example.weeklymealplannergpt.service.mealplan.TheMealDbServiceImpl;
 import com.example.weeklymealplannergpt.service.openai.OpenAIService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ class MealPlanServiceTest {
     private OpenAIService openAIService;
 
     @MockBean
-    private TheMealDbService theMealDbService;
+    private TheMealDbServiceImpl theMealDbServiceImpl;
 
     private Consumer consumer;
 

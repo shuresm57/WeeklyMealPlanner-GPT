@@ -8,12 +8,12 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
-public class TheMealDbService {
+public class TheMealDbServiceImpl implements TheMealDBService {
 
     private final RestTemplate restTemplate;
     private static final String API_BASE_URL = "https://www.themealdb.com/api/json/v1/1";
 
-    public TheMealDbService(RestTemplate restTemplate) {
+    public TheMealDbServiceImpl(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
