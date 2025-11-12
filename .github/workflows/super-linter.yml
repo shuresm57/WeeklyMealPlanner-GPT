@@ -1,34 +1,29 @@
 name: Super-Linter
 
 on:
-  push:
-    branches: [main, development, qa]
   pull_request:
     branches: [main, development, qa]
     paths:
       - '**.js'
       - '**.java'
       - '**.py'
-    types: [ opened, synchronize, reopened ]
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [development]
 
 jobs:
-  lint:
+  super-linter:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Super-Linter
-        uses: super-linter/super-linter@v5
+      - name: Run Super Linter
+        uses: github/super-linter@v5
         env:
-          DEFAULT_BRANCH: main
+          DEFAULT_BRANCH: development
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: true
-          LOG_LEVEL: WARN
           LINTER_COMMENT: true
-
-      - name: Linter Summary Comment
-        uses: reviewdog/action-eslint@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-review
+          LOG_LEVEL: WARN
