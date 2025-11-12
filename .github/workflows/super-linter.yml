@@ -11,6 +11,12 @@ on:
   push:
     branches: [development]
 
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+  checks: write
+
 jobs:
   super-linter:
     runs-on: ubuntu-latest
@@ -18,12 +24,68 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Run Super Linter
+        id: super-linter
         uses: github/super-linter@v5
+        continue-on-error: true
         env:
           DEFAULT_BRANCH: development
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: true
-          LINTER_COMMENT: true
+          VALIDATE_ALL_CODEBASE: false
           LOG_LEVEL: WARN
+
+      - name: Comment on PR with linting results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const outcome = '${{ steps.super-linter.outcome }}';
+            const conclusion = outcome === 'success' ? '✅ All linting checks passed!' : '❌ Some linting issues were found.';
+            
+            const body = `## Super Linter Results
+            
+            ${conclusion}
+            
+            **Status:** ${outcome}
+            
+            ${outcome !== 'success' ? 'Please check the workflow run details for specific linting errors and fix them.' : ''}
+            
+            View the [full workflow run](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}) for details.
+            `;
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Super Linter Results')
+            );
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+
+      - name: Fail if linting failed
+        if: steps.super-linter.outcome != 'success'
+        run: exit 1
