@@ -1,40 +1,57 @@
 package com.example.weeklymealplannergpt.service;
 
+import com.example.weeklymealplannergpt.dto.MealPlanResponse;
 import com.example.weeklymealplannergpt.model.Consumer;
+import com.example.weeklymealplannergpt.model.Meal;
 import com.example.weeklymealplannergpt.model.WeeklyMealPlan;
+import com.example.weeklymealplannergpt.repository.MealRepository;
 import com.example.weeklymealplannergpt.repository.WeeklyMealPlanRepository;
-import com.example.weeklymealplannergpt.service.mealplan.MealPlanService;
-import com.example.weeklymealplannergpt.service.mealplan.TheMealDbServiceImpl;
+import com.example.weeklymealplannergpt.service.consumer.ConsumerService;
+import com.example.weeklymealplannergpt.service.email.EmailService;
+import com.example.weeklymealplannergpt.service.mealplan.MealCacheService;
+import com.example.weeklymealplannergpt.service.mealplan.MealPlanServiceImpl;
 import com.example.weeklymealplannergpt.service.openai.OpenAIService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class MealPlanServiceTest {
 
-    @Autowired
-    private MealPlanService mealPlanService;
-
-    @MockBean
+    @Mock
     private WeeklyMealPlanRepository weeklyMealPlanRepository;
 
-    @MockBean
+    @Mock
+    private MealRepository mealRepository;
+
+    @Mock
     private OpenAIService openAIService;
 
-    @MockBean
-    private TheMealDbServiceImpl theMealDbServiceImpl;
+    @Mock
+    private MealCacheService mealCacheService;
+
+    @Mock
+    private ConsumerService consumerService;
+
+    @Mock
+    private EmailService emailService;
+
+    @InjectMocks
+    private MealPlanServiceImpl mealPlanService;
 
     private Consumer consumer;
 
@@ -47,23 +64,53 @@ class MealPlanServiceTest {
     }
 
     @Test
-    void testGenerateWeeklyMealPlan() {
-        when(openAIService.generateMealPlan(any())).thenReturn(new ArrayList<>());
+    void generateWeeklyMealPlan_createsNewPlan() {
+        List<Meal> meals = new ArrayList<>();
+        Meal meal = new Meal();
+        meal.setMealName("Pasta");
+        meals.add(meal);
+        
+        when(consumerService.existsById(any())).thenReturn(true);
+        when(openAIService.generateMealPlan(any(), eq(1))).thenReturn(meals);
+        when(openAIService.getLastGeneratedMessage()).thenReturn("Plan created");
+        when(mealCacheService.getMealByName(any())).thenReturn(null);
+        when(mealRepository.save(any())).thenReturn(meal);
         when(weeklyMealPlanRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        WeeklyMealPlan plan = mealPlanService.generateWeeklyMealPlan(consumer);
+        MealPlanResponse result = mealPlanService.generateWeeklyMealPlan(consumer);
 
-        assertNotNull(plan);
-        assertNotNull(plan.getWeekStartDate());
-        verify(weeklyMealPlanRepository).save(any());
+        assertNotNull(result);
+        assertNotNull(result.getMealPlan());
+        assertEquals("Plan created", result.getMessage());
     }
 
     @Test
-    void testGetCurrentWeekPlan() {
+    void generateMonthlyMealPlan_creates20Meals() {
+        List<Meal> meals = new ArrayList<>();
+        for (int i = 0; i < 20; i++) {
+            Meal meal = new Meal();
+            meal.setMealName("Meal " + i);
+            meals.add(meal);
+        }
+        
+        when(consumerService.existsById(any())).thenReturn(true);
+        when(openAIService.generateMealPlan(any(), eq(4))).thenReturn(meals);
+        when(openAIService.getLastGeneratedMessage()).thenReturn("Monthly plan created");
+        when(mealCacheService.getMealByName(any())).thenReturn(null);
+        when(mealRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(weeklyMealPlanRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        MealPlanResponse result = mealPlanService.generateMonthlyMealPlan(consumer);
+
+        assertNotNull(result);
+        assertEquals(20, result.getMealPlan().getMeals().size());
+    }
+
+    @Test
+    void getCurrentWeekPlan_returnsExistingPlan() {
         WeeklyMealPlan plan = new WeeklyMealPlan();
         plan.setWeekStartDate(LocalDate.now());
-        when(weeklyMealPlanRepository.findByConsumerIdAndWeekStartDate(any(), any()))
-                .thenReturn(plan);
+        when(weeklyMealPlanRepository.findByConsumerIdAndWeekStartDate(any(), any())).thenReturn(plan);
 
         WeeklyMealPlan result = mealPlanService.getCurrentWeekPlan(consumer.getId());
 
@@ -72,15 +119,15 @@ class MealPlanServiceTest {
     }
 
     @Test
-    void testGetPlanHistory() {
+    void getPlanHistory_returnsAllPlans() {
         List<WeeklyMealPlan> plans = new ArrayList<>();
         plans.add(new WeeklyMealPlan());
-        when(weeklyMealPlanRepository.findByConsumerIdOrderByWeekStartDateDesc(any()))
-                .thenReturn(plans);
+        plans.add(new WeeklyMealPlan());
+        when(weeklyMealPlanRepository.findByConsumerIdOrderByWeekStartDateDesc(any())).thenReturn(plans);
 
         List<WeeklyMealPlan> result = mealPlanService.getPlanHistory(consumer.getId());
 
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(2, result.size());
     }
 }
