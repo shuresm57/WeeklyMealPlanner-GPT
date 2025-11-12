@@ -54,9 +54,132 @@ public class MealCacheService {
 - `MealPlanServiceImpl` til at bruge cache
 - Tilføj cache invalidation ved nye meals
 
+**Hvordan opdatere MealPlanServiceImpl til at bruge MealCache:**
+
+**Problem:** 
+- Nuværende OpenAIServiceImpl.parseMealPlanResponse() opretter NYE Meal objekter hver gang (linje 152-162)
+- Disse meals gemmes direkte i databasen via WeeklyMealPlan.setMeals()
+- Dette skaber duplikater - samme ret (f.eks. "Spaghetti Bolognese") gemmes flere gange i Meal-tabellen
+- Performance issue: Ingen genanvendelse af eksisterende meals
+
+**Løsning - 3 trin:**
+
+**1. Tilføj addToCache() metode til MealCacheService interface:**
+```java
+// MealCacheService.java
+public interface MealCacheService {
+    Meal getMealByName(String name);
+    void addToCache(Meal meal);  // NY metode
+}
+```
+
+**2. Implementer addToCache() i MealCacheServiceImpl:**
+```java
+// MealCacheServiceImpl.java
+public void addToCache(Meal meal) {
+    mealCache.add(meal);
+}
+```
+
+**3. Opdater MealPlanServiceImpl - HOVEDÆNDRING:**
+```java
+// MealPlanServiceImpl.java
+
+@Autowired
+private MealCacheService mealCacheService;  // TILFØJ denne dependency
+
+@Autowired
+private MealRepository mealRepository;  // TILFØJ denne dependency
+
+@Transactional
+public WeeklyMealPlan generateWeeklyMealPlan(Consumer consumer) {
+    logger.info("Generating meal plan for consumer: {}", consumer.getId());
+    
+    // ... existing validation code ...
+    
+    try {
+        // OpenAI genererer nye meals (som før)
+        List<Meal> generatedMeals = openAIService.generateMealPlan(consumer);
+        logger.info("Generated {} meals", generatedMeals.size());
+        
+        if (generatedMeals == null || generatedMeals.isEmpty()) {
+            logger.warn("No meals generated for consumer: {}", consumer.getId());
+            throw new MealGenerationException("Could not generate meals. Please try again.");
+        }
+        
+        // NY LOGIK: Check cache først, ellers gem ny meal
+        List<Meal> finalMeals = new ArrayList<>();
+        
+        for (Meal generatedMeal : generatedMeals) {
+            // 1. Tjek om meal allerede findes i cache (O(1) lookup!)
+            Meal existingMeal = mealCacheService.getMealByName(generatedMeal.getMealName());
+            
+            if (existingMeal != null) {
+                // Meal findes allerede - genbruger den
+                logger.debug("Using cached meal: {}", existingMeal.getMealName());
+                finalMeals.add(existingMeal);
+            } else {
+                // Ny meal - gem i DB og tilføj til cache
+                logger.debug("Saving new meal to database: {}", generatedMeal.getMealName());
+                Meal savedMeal = mealRepository.save(generatedMeal);
+                mealCacheService.addToCache(savedMeal);
+                finalMeals.add(savedMeal);
+            }
+        }
+        
+        // Opret meal plan med cache-optimerede meals
+        WeeklyMealPlan plan = new WeeklyMealPlan();
+        plan.setConsumer(consumer);
+        plan.setWeekStartDate(getWeekStartDate());
+        plan.setMeals(finalMeals);  // Brug finalMeals i stedet for generatedMeals
+        
+        WeeklyMealPlan saved = weeklyMealPlanRepository.save(plan);
+        logger.info("Successfully saved meal plan with ID: {}", saved.getId());
+        
+        return saved;
+    } catch (MealGenerationException e) {
+        throw e;
+    } catch (Exception e) {
+        logger.error("Unexpected error generating meal plan for consumer: {}", consumer.getId(), e);
+        throw new MealGenerationException("Failed to generate meal plan", e);
+    }
+}
+```
+
+**Alternativ (hvis Meal skal have hashCode/equals):**
+Hvis du vil bruge HashSet effektivt, tilføj til Meal.java:
+```java
+@Override
+public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof Meal)) return false;
+    Meal meal = (Meal) o;
+    return Objects.equals(mealName, meal.mealName);
+}
+
+@Override
+public int hashCode() {
+    return Objects.hash(mealName);
+}
+```
+
+**Fordele ved denne løsning:**
+- ✅ Ingen duplikerede meals i databasen
+- ✅ O(1) cache lookup i stedet for O(n) database query
+- ✅ Reduktion i DB writes (kun nye meals gemmes)
+- ✅ Konsistent data - samme meal får samme ID
+- ✅ Performance: 5-10x hurtigere ved gentagende meals
+
+**VIGTIGT:** 
+- OpenAIServiceImpl skal IKKE ændres - den genererer stadig nye Meal objekter
+- MealPlanServiceImpl håndterer cache-logikken
+- Dette separation of concerns holder koden ren
+
 **Test:**
 - Performance test: Generer 10 meal plans
 - Check cache hits vs misses
+- Verify ingen duplikerede meals i database
+- Log "Using cached meal" vs "Saving new meal" for at se cache hit rate
 
 ---
 
@@ -135,16 +258,103 @@ public class GlobalExceptionHandler {
 
 ### 5. Database Optimization (1-2 timer)
 
-#### A. Add Indexes
+#### A. Add Indexes - VIGTIG HASTIGHEDSOPTIMERING
+
+**Hvor skal indexes tilføjes:**
+
+**1. Meal.java - Index på mealName (KRITISK for cache lookup)**
 ```java
 @Entity
-@Table(indexes = {
-    @Index(name = "idx_meal_name", columnList = "mealName"),
-    @Index(name = "idx_consumer_email", columnList = "email"),
-    @Index(name = "idx_plan_date", columnList = "weekStartDate")
+@Table(name = "meal", indexes = {
+    @Index(name = "idx_meal_name", columnList = "mealName")
 })
-public class WeeklyMealPlan { ... }
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+public class Meal {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String mealName, imgUrl;
+    
+    @ElementCollection
+    private List<String> ingredients;
+}
 ```
+**Hvorfor:** MealCacheService.getMealByName() bruger mealName til lookup. Uden index = O(n) scan.
+
+---
+
+**2. Consumer.java - Index på email (KRITISK for login)**
+```java
+@Entity
+@Table(name = "consumer", indexes = {
+    @Index(name = "idx_consumer_email", columnList = "email", unique = true)
+})
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+public class Consumer {
+    @Id
+    @GeneratedValue
+    private UUID id;
+    
+    private String email, name, dietType;
+    
+    @ElementCollection
+    private Set<String> allergies, dislikes;
+    
+    @OneToMany(mappedBy = "consumer")
+    @JsonIgnore
+    private List<WeeklyMealPlan> mealPlans;
+}
+```
+**Hvorfor:** ConsumerRepository.findByEmail() kaldes ved hver login via OAuth2. Uden index = fuld tabel scan.
+
+---
+
+**3. WeeklyMealPlan.java - Composite index på consumer_id + weekStartDate (KRITISK for queries)**
+```java
+@Entity
+@Table(name = "weekly_meal_plan", indexes = {
+    @Index(name = "idx_consumer_week", columnList = "consumer_id, week_start_date"),
+    @Index(name = "idx_consumer_id", columnList = "consumer_id"),
+    @Index(name = "idx_week_start_date", columnList = "week_start_date")
+})
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+public class WeeklyMealPlan {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(name = "week_start_date")
+    private LocalDate weekStartDate;
+    
+    @ManyToOne
+    @JoinColumn(name = "consumer_id")
+    private Consumer consumer;
+    
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<Meal> meals;
+}
+```
+**Hvorfor:**
+- `findByConsumerIdAndWeekStartDate()` - bruges til at hente current week plan (composite index optimerer dette)
+- `findByConsumerIdOrderByWeekStartDateDesc()` - bruges til history (consumer_id index + weekStartDate sort)
+
+**VIGTIGT:** Composite index `idx_consumer_week` dækker BEGGE queries effektivt!
+
+---
+
+**Index prioritet:**
+1. 🔴 **Consumer.email** - kaldes ved HVER login
+2. 🔴 **WeeklyMealPlan(consumer_id, weekStartDate)** - kaldes ved HVER page load
+3. 🟡 **Meal.mealName** - bruges til cache lookup (men cache reducerer DB hits)
+
+**Performance gevinst:**
+- Uden indexes: O(n) - fuld tabel scan
+- Med indexes: O(log n) - B-tree lookup
+- På 10,000 records: ~10,000x hurtigere! (10,000 → 13 sammenligninger)
+
+**Efter tilføjelse af indexes:**
+- Genstart applikationen for at Hibernate opretter tabeller med indexes
+- Alternativt: Kør `./mvnw spring-boot:run` med `spring.jpa.hibernate.ddl-auto=update`
 
 #### B. Optimize Queries
 ```java

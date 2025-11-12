@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface OpenAIService {
     List<Meal> generateMealPlan(Consumer consumer);
+    List<Meal> generateMealPlan(Consumer consumer, int weeks);
+    String getLastGeneratedMessage();
 }
