@@ -15,7 +15,10 @@ const translations = {
         omnivore: 'Omnivore',
         vegetarian: 'Vegetarian',
         vegan: 'Vegan',
-        none: 'None'
+        none: 'None',
+        sendEmail: 'Send via Email',
+        emailSent: 'Email sent!',
+        emailFailed: 'Failed to send email'
     },
     da: {
         preferences: 'Præferencer',
@@ -32,12 +35,16 @@ const translations = {
         omnivore: 'Altædende',
         vegetarian: 'Vegetar',
         vegan: 'Veganer',
-        none: 'Ingen'
+        none: 'Ingen',
+        sendEmail: 'Send på Email',
+        emailSent: 'Email sendt!',
+        emailFailed: 'Email kunne ikke sendes'
     }
 };
 
 let currentLang = localStorage.getItem('lang') || 'en';
 let currentTheme = localStorage.getItem('theme') || 'light';
+let currentMealPlanId = null;
 
 // Apply saved preferences
 document.documentElement.setAttribute('data-theme', currentTheme);
@@ -122,30 +129,81 @@ async function loadCurrentMealPlan() {
 }
 
 // Display meal plan
-function displayMealPlan(plan) {
+function displayMealPlan(planData) {
     const container = document.getElementById('mealPlanContent');
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    
+    let plan = planData;
+    let message = null;
+    
+    // Check if we received a MealPlanResponse object
+    if (planData.mealPlan) {
+        plan = planData.mealPlan;
+        message = planData.message;
+    }
+    
+    currentMealPlanId = plan.id;
     
     if (!plan.meals || plan.meals.length === 0) {
         showEmptyState();
         return;
     }
     
-    container.innerHTML = plan.meals.map((meal, index) => `
-        <div class="card shadow-sm mb-3 meal-card">
-            <div class="card-body">
-                <div class="meal-day">${days[index] || 'Day ' + (index + 1)}</div>
-                <h5 class="meal-title">${meal.mealName}</h5>
-                <div class="meal-ingredients">
-                    ${meal.ingredients.slice(0, 5).map(ing => 
-                        `<span class="ingredient-badge">${ing}</span>`
-                    ).join('')}
-                    ${meal.ingredients.length > 5 ? `<span class="ingredient-badge">+${meal.ingredients.length - 5} more</span>` : ''}
-                </div>
-            </div>
-        </div>
-    `).join('');
+    let html = '';
     
+    // Show ChatGPT message if available
+    if (message) {
+        html += `
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-robot"></i> <strong>ChefGPT says:</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+    }
+    
+    // Add email button
+    html += `
+        <div class="mb-3 d-flex justify-content-end">
+            <button class="btn btn-outline-primary btn-sm" onclick="sendMealPlanByEmail()">
+                <i class="bi bi-envelope"></i> <span data-i18n="sendEmail">Send via Email</span>
+            </button>
+        </div>
+    `;
+    
+    // Calculate weeks
+    const totalMeals = plan.meals.length;
+    const weeksCount = Math.ceil(totalMeals / 5);
+    
+    for (let week = 0; week < weeksCount; week++) {
+        if (weeksCount > 1) {
+            html += `<h5 class="mt-4 mb-3">Week ${week + 1}</h5>`;
+        }
+        
+        const startIdx = week * 5;
+        const endIdx = Math.min(startIdx + 5, totalMeals);
+        
+        for (let i = startIdx; i < endIdx; i++) {
+            const meal = plan.meals[i];
+            const dayIndex = i % 5;
+            
+            html += `
+                <div class="card shadow-sm mb-3 meal-card">
+                    <div class="card-body">
+                        <div class="meal-day">${days[dayIndex] || 'Day ' + (dayIndex + 1)}</div>
+                        <h5 class="meal-title">${meal.mealName}</h5>
+                        <div class="meal-ingredients">
+                            ${meal.ingredients.slice(0, 5).map(ing => 
+                                `<span class="ingredient-badge">${ing}</span>`
+                            ).join('')}
+                            ${meal.ingredients.length > 5 ? `<span class="ingredient-badge">+${meal.ingredients.length - 5} more</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    container.innerHTML = html;
     document.getElementById('mealPlanSkeleton').style.display = 'none';
     document.getElementById('emptyState').style.display = 'none';
 }
@@ -171,7 +229,7 @@ async function generateMealPlan() {
     const csrfToken = getCsrfToken();
 
     try {
-        const response = await fetch('/api/mealplan/generate', {
+        const response = await fetch('/api/mealplan/generate?type=monthly', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -181,8 +239,8 @@ async function generateMealPlan() {
         });
 
         if (response.ok) {
-            const plan = await response.json();
-            displayMealPlan(plan);
+            const planResponse = await response.json();
+            displayMealPlan(planResponse);
             loadHistory();
         } else {
             const error = await response.json();
@@ -194,6 +252,37 @@ async function generateMealPlan() {
     } finally {
         btn.disabled = false;
         spinner.classList.add('d-none');
+    }
+}
+
+// Send meal plan by email
+async function sendMealPlanByEmail() {
+    if (!currentMealPlanId) {
+        alert('No meal plan to send');
+        return;
+    }
+    
+    await ensureCsrfToken();
+    const csrfToken = getCsrfToken();
+    
+    try {
+        const response = await fetch(`/api/mealplan/${currentMealPlanId}/email`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-XSRF-TOKEN': csrfToken
+            },
+            credentials: 'same-origin'
+        });
+        
+        if (response.ok) {
+            alert(translations[currentLang].emailSent || 'Email sent!');
+        } else {
+            alert(translations[currentLang].emailFailed || 'Failed to send email');
+        }
+    } catch (error) {
+        console.error('Error sending email:', error);
+        alert(translations[currentLang].emailFailed || 'Failed to send email');
     }
 }
 
