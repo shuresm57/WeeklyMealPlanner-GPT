@@ -1,56 +1,58 @@
 package com.example.weeklymealplannergpt.service;
 
 import com.example.weeklymealplannergpt.model.Consumer;
-import com.example.weeklymealplannergpt.model.WeeklyMealPlan;
 import com.example.weeklymealplannergpt.repository.ConsumerRepository;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import com.example.weeklymealplannergpt.service.consumer.ConsumerServiceImpl;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ConsumerServiceTest {
+@ExtendWith(MockitoExtension.class)
+class ConsumerServiceTest {
 
     @Mock
     private ConsumerRepository consumerRepository;
 
-    private Consumer consumer;
+    @InjectMocks
+    private ConsumerServiceImpl consumerService;
 
-    @BeforeAll
-    public void beforeAll() {
-        MockitoAnnotations.openMocks(this);
-    }
+    @Test
+    void findByEmail_returnsConsumer() {
+        Consumer consumer = new Consumer();
+        consumer.setId(UUID.randomUUID());
+        consumer.setEmail("test@example.com");
+        consumer.setName("John Doe");
+        when(consumerRepository.findByEmail("test@example.com")).thenReturn(Optional.of(consumer));
 
-    @BeforeEach
-    void beforeEach() {
-        consumer = new Consumer(UUID.randomUUID(), "test@example.com", "John Doe", "OMNIVORE", Set.of("Peanuts", "Dairy"), Set.of("Raisins"), null);
-        consumerRepository.save(consumer);
+        Consumer result = consumerService.findByEmail("test@example.com");
+
+        assertNotNull(result);
+        assertEquals("test@example.com", result.getEmail());
+        assertEquals("John Doe", result.getName());
     }
 
     @Test
-    public void consumerRepositoryReturnsEmail(){
-        //Arrange
-        when(consumerRepository.findByEmail("test@example.com")).thenReturn(Optional.of(consumer));
+    void save_returnsConsumer() {
+        Consumer consumer = new Consumer();
+        consumer.setId(UUID.randomUUID());
+        consumer.setEmail("new@example.com");
+        consumer.setDietType("vegan");
+        when(consumerRepository.save(any(Consumer.class))).thenReturn(consumer);
 
-        //Act
-        Optional<Consumer> result = consumerRepository.findByEmail("test@example.com");
+        Consumer result = consumerService.save(consumer);
 
-        //Assert
-        assertTrue(result.isPresent());
-        assertEquals("test@example.com", result.get().getEmail());
-        verify(consumerRepository).findByEmail("test@example.com");
+        assertNotNull(result);
+        assertEquals("new@example.com", result.getEmail());
+        assertEquals("vegan", result.getDietType());
     }
-
-
 }
