@@ -7,7 +7,7 @@ if (window.location.pathname.includes('dashboard.html')) {
         
         const langBtn = document.getElementById('langToggle');
         if (langBtn) {
-            langBtn.textContent = currentLang === 'en' ? '🇩🇰' : '🇬🇧';
+            langBtn.textContent = currentLang === 'en' ? 'DK' : 'EN';
         }
         
         updateTranslations();
