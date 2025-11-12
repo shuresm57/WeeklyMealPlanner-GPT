@@ -63,7 +63,7 @@ function toggleLanguage() {
     
     const langBtn = document.getElementById('langToggle');
     if (langBtn) {
-        langBtn.textContent = currentLang === 'en' ? '🇩🇰' : '🇬🇧';
+        langBtn.textContent = currentLang === 'en' ? 'DK' : 'EN';
     }
 }
 
