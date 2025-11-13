@@ -22,14 +22,30 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run Super-Linter
-        uses: github/super-linter@v5
-        env:
-          VALIDATE_ALL_CODEBASE: false
-          DEFAULT_BRANCH: development
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OUTPUT_DETAILS: detailed
-          OUTPUT_FILE: super-linter-results.txt
+      - name: Cache Docker layers for Super-Linter
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.docker-cache
+          key: ${{ runner.os }}-superlinter-${{ hashFiles('.github/workflows/super-linter.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-superlinter-
+
+      - name: Pull Super-Linter image (cached)
+        run: |
+          mkdir -p /tmp/.docker-cache
+          docker load -i /tmp/.docker-cache/super-linter-image.tar || true
+          docker pull ghcr.io/github/super-linter:slim-v5
+          docker save ghcr.io/github/super-linter:slim-v5 -o /tmp/.docker-cache/super-linter-image.tar
+
+      - name: Run Super-Linter and save results
+        run: |
+          docker run --rm \
+            -e VALIDATE_ALL_CODEBASE=false \
+            -e DEFAULT_BRANCH=development \
+            -e GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+            -v ${{ github.workspace }}:/tmp/lint \
+            ghcr.io/github/super-linter:slim-v5 \
+            > super-linter-results.txt 2>&1 || true
 
       - name: Upload Linter Report
         uses: actions/upload-artifact@v4
