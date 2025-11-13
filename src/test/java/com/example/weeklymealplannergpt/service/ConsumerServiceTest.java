@@ -101,7 +101,7 @@ class ConsumerServiceTest {
         assertThat(exists).isTrue();
     }
 
-    // Hjælpermetode
+    //Hjælpermetode
     private Consumer createTestConsumer(String email) {
         Consumer consumer = new Consumer();
         consumer.setId(UUID.randomUUID());
