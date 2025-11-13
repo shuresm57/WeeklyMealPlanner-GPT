@@ -1,0 +1,41 @@
+name: Update Maven Dependencies
+
+on:
+  schedule:
+    # Runs twice a day at 00:00 and 12:00 UTC
+    - cron: "0 0,12 * * *"
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  update-deps:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Update Maven dependencies
+        run: mvn versions:use-latest-releases versions:commit
+
+      - name: Commit updated pom.xml
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pom.xml
+          git commit -m "Update Maven dependencies" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
