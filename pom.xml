@@ -100,11 +100,6 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/jacoco</outputDirectory>
-                            <dataFile>${project.build.directory}/jacoco.exec</dataFile>
-                            <formats>
-                                <format>xml</format>
-                                <format>html</format>
-                            </formats>
                         </configuration>
                     </execution>
                 </executions>
@@ -143,6 +138,7 @@
                 <version>3.1.2</version>
                 <configuration>
                     <argLine>
+                        @{argLine}
                         --add-opens java.base/java.lang=ALL-UNNAMED
                         -javaagent:${settings.localRepository}/org/mockito/mockito-core/5.17.0/mockito-core-5.17.0.jar
                     </argLine>
