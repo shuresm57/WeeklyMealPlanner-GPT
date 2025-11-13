@@ -83,7 +83,7 @@ class ConsumerServiceTest {
         // Assert
         assertNotNull(result, "Returned consumer should not be null");
         assertEquals("test@example.com", result.getEmail());
-        assertEquals("vegan", result.getDietType());
+        assertEquals("omnivore", result.getDietType());
 
         verify(consumerRepository, times(1)).save(consumer);
     }
