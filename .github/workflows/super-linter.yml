@@ -3,14 +3,8 @@ name: Super-Linter
 on:
   pull_request:
     branches: [main, development, qa]
-    paths:
-      - '**.js'
-      - '**.java'
-      - '**.html'
-      - '**.css'
-    types: [opened, synchronize, reopened]
   push:
-    branches: [development]
+    branches: [main, development, qa]
 
 permissions:
   contents: read
