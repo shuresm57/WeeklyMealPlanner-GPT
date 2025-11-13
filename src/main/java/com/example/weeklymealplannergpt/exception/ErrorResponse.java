@@ -1,8 +1,8 @@
 package com.example.weeklymealplannergpt.exception;
 
 public class ErrorResponse {
-    private String message;
-    private long timestamp;
+    private final String message;
+    private final long timestamp;
     
     public ErrorResponse(String message) {
         this.message = message;
