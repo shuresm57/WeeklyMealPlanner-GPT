@@ -7,11 +7,6 @@ async function loadProfile() {
             document.getElementById('userName').textContent = profile.name || 'User';
             document.getElementById('userEmail').textContent = profile.email || '';
             
-            // Load saved language preference
-            if (profile.language) {
-                setLanguage(profile.language);
-            }
-            
             document.getElementById('profileSkeleton').style.display = 'none';
             document.getElementById('profileContent').style.display = 'block';
             
@@ -28,9 +23,9 @@ function loadPreferences(profile) {
     const allergies = profile.allergies || [];
     const dislikes = profile.dislikes || [];
     
-    document.getElementById('dietType').textContent = translate(dietType);
-    document.getElementById('allergiesList').textContent = allergies.length > 0 ? allergies.join(', ') : translate('none');
-    document.getElementById('dislikesList').textContent = dislikes.length > 0 ? dislikes.join(', ') : translate('none');
+    document.getElementById('dietType').textContent = dietType;
+    document.getElementById('allergiesList').textContent = allergies.length > 0 ? allergies.join(', ') : 'none';
+    document.getElementById('dislikesList').textContent = dislikes.length > 0 ? dislikes.join(', ') : 'none';
     
     document.getElementById('preferencesSkeleton').style.display = 'none';
     document.getElementById('preferencesContent').style.display = 'block';
