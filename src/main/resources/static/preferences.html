@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preferences - Meal Planner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold" href="dashboard.html">
+                <i class="bi bi-calendar-check text-primary"></i> Meal Planner
+            </a>
+            <a href="dashboard.html" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-sliders"></i> Update Preferences
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="preferencesForm">
+                            <div class="mb-4">
+                                <label for="language" class="form-label">Language</label>
+                                <select class="form-select" id="language">
+                                    <option value="en">🇬🇧 English</option>
+                                    <option value="da">🇩🇰 Dansk</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="dietType" class="form-label">Diet Type</label>
+                                <select class="form-select" id="dietType" required>
+                                    <option value="omnivore">Omnivore</option>
+                                    <option value="vegetarian">Vegetarian</option>
+                                    <option value="vegan">Vegan</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="allergies" class="form-label">Allergies</label>
+                                <input type="text" class="form-control" id="allergies" 
+                                       placeholder="e.g., peanuts, shellfish (comma separated)">
+                                <div class="form-text">Separate multiple items with commas</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="dislikes" class="form-label">Dislikes</label>
+                                <input type="text" class="form-control" id="dislikes" 
+                                       placeholder="e.g., mushrooms, olives (comma separated)">
+                                <div class="form-text">Separate multiple items with commas</div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-check-lg"></i> Save Preferences
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-4 mt-5 border-top">
+        <p class="small text-muted mb-0">
+            Built with <i class="bi bi-heart-fill text-danger"></i> using ChatGPT &amp; 
+            <a href="https://www.themealdb.com" target="_blank" class="text-decoration-none">TheMealDB.com</a>
+        </p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Load current preferences
+        async function loadCurrentPreferences() {
+            try {
+                const response = await fetch('/api/profile');
+                if (response.ok) {
+                    const profile = await response.json();
+                    document.getElementById('language').value = profile.language || 'en';
+                    document.getElementById('dietType').value = profile.dietType || 'omnivore';
+                    document.getElementById('allergies').value = (profile.allergies || []).join(', ');
+                    document.getElementById('dislikes').value = (profile.dislikes || []).join(', ');
+                }
+            } catch (error) {
+                console.error('Error loading preferences:', error);
+            }
+        }
+
+        // Save preferences
+        async function savePreferences(event) {
+            event.preventDefault();
+
+            const allergiesText = document.getElementById('allergies').value;
+            const dislikesText = document.getElementById('dislikes').value;
+
+            const preferences = {
+                language: document.getElementById('language').value,
+                dietType: document.getElementById('dietType').value,
+                allergies: allergiesText ? allergiesText.split(',').map(s => s.trim()) : [],
+                dislikes: dislikesText ? dislikesText.split(',').map(s => s.trim()) : []
+            };
+
+            await ensureCsrfToken();
+            const csrfToken = getCsrfToken();
+
+            try {
+                const response = await fetch('/api/profile/preferences', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-XSRF-TOKEN': csrfToken
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(preferences)
+                });
+
+                if (response.ok) {
+                    alert('Preferences saved successfully!');
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert('Failed to save preferences');
+                }
+            } catch (error) {
+                console.error('Error saving preferences:', error);
+                alert('An error occurred');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCurrentPreferences();
+            document.getElementById('preferencesForm').addEventListener('submit', savePreferences);
+        });
+    </script>
+</body>
+</html>
