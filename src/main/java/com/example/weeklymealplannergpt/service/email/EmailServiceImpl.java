@@ -7,8 +7,10 @@ import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -22,23 +24,19 @@ public class EmailServiceImpl implements EmailService {
     private final JavaMailSender javaMailSender;
     private final SpringTemplateEngine templateEngine;
 
-    @Value("${spring.mail.enabled:false}")
-    private boolean emailEnabled;
 
     public EmailServiceImpl(JavaMailSender javaMailSender, SpringTemplateEngine templateEngine) {
         this.javaMailSender = javaMailSender;
         this.templateEngine = templateEngine;
     }
 
-    public void sendWeeklyMeanPlan(Consumer consumer) throws MessagingException {
+    @Async
+    public void sendWeeklyMealPlan(Consumer consumer) throws MessagingException {
         sendMealPlan(consumer, null);
     }
-    
+
+    @Async
     public void sendMealPlan(Consumer consumer, WeeklyMealPlan mealPlan) throws MessagingException {
-        if (!emailEnabled) {
-            logger.warn("Email is disabled. Skipping email to {}", consumer.getEmail());
-            throw new MessagingException("Email functionality is disabled. Configure spring.mail.enabled=true and valid SMTP settings.");
-        }
         
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -56,9 +54,9 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(html, true);
             javaMailSender.send(mimeMessage);
             logger.info("Email sent successfully to {}", consumer.getEmail());
-        } catch (MessagingException exception){
-            logger.error("Failed to send email to {}", consumer.getEmail(), exception);
-            throw new RuntimeException("Failed to send email: " + exception.getMessage(), exception);
+        } catch (MessagingException | MailException e) {
+            logger.error("Failed to send email to {}", consumer.getEmail(), e);
+            throw new RuntimeException("Failed to send email", e);
         }
     }
 }

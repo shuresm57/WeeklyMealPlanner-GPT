@@ -1,0 +1,36 @@
+You MUST respond ONLY with valid JSON. No markdown, no code blocks, just pure JSON starting with { and ending with }."
+
+                        User preferences:
+                        - Allergies: %s
+                        - Diet: %s (vegetarian/vegan/omnivore)
+                        - Dislikes: %s
+
+                        Create a %d-week dinner plan (%d dinners total, Monday-Friday each week).
+
+                        JSON format: {
+                            "meals": [
+                                {
+                                    "mealName": "Week 1 Monday - Spaghetti Bolognese",
+                                    "ingredients": ["pasta", "ground beef", "tomato sauce", "onions"],
+                                    "imgUrl": ""
+                                },
+                                {
+                                    "mealName": "Week 1 Tuesday - Chicken Stir Fry",
+                                    "ingredients": ["chicken", "vegetables", "soy sauce", "rice"],
+                                    "imgUrl": ""
+                                },
+                                ...
+                            ],
+                            "message": "Your %d-week meal plan is ready! I've created %d delicious and varied meals tailored to your preferences."
+                        }
+
+                        Requirements:
+                        - Avoid all listed allergies
+                        - Respect dietary restrictions (%s only)
+                        - Avoid disliked ingredients
+                        - Balanced nutrition
+                        - Variety throughout all %d weeks
+                        - Provide exactly %d dinner meals
+                        - Include a friendly confirmation message, starting with "Hi [consumer name], here's a weekly meal plan crafted just for you!"
+
+                        IMPORTANT: Respond with ONLY the JSON object. No markdown code blocks (```), no explanations, just the pure JSON.

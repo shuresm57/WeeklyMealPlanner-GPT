@@ -173,6 +173,21 @@ body {
     filter: invert(1);
 }
 
+[data-theme="dark"] .form-text {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .navbar-brand,
+[data-theme="dark"] .navbar-brand *,
+[data-theme="dark"] .btn,
+[data-theme="dark"] a:not(.btn) {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .text-muted {
+    color: var(--text-secondary) !important;
+}
+
 /* Preferences Page */
 .form-label {
     font-weight: 500;

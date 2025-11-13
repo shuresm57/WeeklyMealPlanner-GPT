@@ -31,6 +31,9 @@ public class ProfileController {
         consumer.setDietType(request.getDietType());
         consumer.setAllergies(request.getAllergies());
         consumer.setDislikes(request.getDislikes());
+        if (request.getLanguage() != null) {
+            consumer.setLanguage(request.getLanguage());
+        }
         
         return consumerService.save(consumer);
     }

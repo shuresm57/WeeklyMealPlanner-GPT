@@ -9,6 +9,7 @@ import java.util.Set;
 @Setter
 public class PreferencesRequest {
     private String dietType;
+    private String language;
     private Set<String> allergies;
     private Set<String> dislikes;
 }

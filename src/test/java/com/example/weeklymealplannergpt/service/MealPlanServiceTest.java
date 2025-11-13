@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +65,7 @@ class MealPlanServiceTest {
     }
 
     @Test
-    void generateWeeklyMealPlan_createsNewPlan() {
+    void generateWeeklyMealPlan_createsNewPlan() throws IOException {
         List<Meal> meals = new ArrayList<>();
         Meal meal = new Meal();
         meal.setMealName("Pasta");
@@ -85,7 +86,7 @@ class MealPlanServiceTest {
     }
 
     @Test
-    void generateMonthlyMealPlan_creates20Meals() {
+    void generateMonthlyMealPlan_creates20Meals() throws IOException {
         List<Meal> meals = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
             Meal meal = new Meal();

@@ -25,7 +25,7 @@ public class Consumer {
     @GeneratedValue
     private UUID id;
 
-    private String email, name, dietType;
+    private String email, name, dietType, language;
 
     @ElementCollection
     private Set<String> allergies, dislikes;
