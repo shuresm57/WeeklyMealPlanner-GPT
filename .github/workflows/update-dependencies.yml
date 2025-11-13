@@ -29,10 +29,10 @@ jobs:
       - name: Update Maven dependencies
         run: mvn versions:use-latest-releases versions:commit
 
-      - name: Commit and push updates as personal account
+      - name: Commit and push updates
         run: |
           git config user.name "${{ secrets.GIT_UNAME }}"
           git config user.email "${{ secrets.GIT_EMAIL }}"
           git add pom.xml
           git commit -m "Update Maven dependencies" || echo "No changes to commit"
-          git push https://${{ secrets.GIT_USERNAME }}:${{ secrets.PAT_TOKEN }}@github.com/${{ secrets.GIT_USERNAME }}/YOUR_REPO.git HEAD:main
+          git push https://${{ secrets.GIT_USERNAME }}:${{ secrets.PAT_TOKEN }}@github.com/${{ secrets.GIT_USERNAME }}/WeeklyMealPlanner-GPT.git HEAD:main
