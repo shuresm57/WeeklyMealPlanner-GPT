@@ -22,28 +22,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Cache Super-Linter Docker image
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.docker-cache
-          key: ${{ runner.os }}-superlinter-${{ hashFiles('.github/workflows/super-linter.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-superlinter-
-
-      - name: Pull and cache Super-Linter image
-        run: |
-          mkdir -p /tmp/.docker-cache
-          docker load -i /tmp/.docker-cache/super-linter-image.tar || true
-          docker pull ghcr.io/github/super-linter:slim-v5
-          docker save ghcr.io/github/super-linter:slim-v5 -o /tmp/.docker-cache/super-linter-image.tar
-
       - name: Run Super-Linter
         uses: github/super-linter@v5
         env:
-          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_ALL_CODEBASE: true
           DEFAULT_BRANCH: development
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUN_LOCAL: true
           OUTPUT_DETAILS: detailed
           OUTPUT_FILE: super-linter-results.txt
 
