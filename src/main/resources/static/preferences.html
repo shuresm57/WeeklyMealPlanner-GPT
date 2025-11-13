@@ -32,6 +32,14 @@
                     <div class="card-body">
                         <form id="preferencesForm">
                             <div class="mb-4">
+                                <label for="language" class="form-label">Language</label>
+                                <select class="form-select" id="language">
+                                    <option value="en">🇬🇧 English</option>
+                                    <option value="da">🇩🇰 Dansk</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
                                 <label for="dietType" class="form-label">Diet Type</label>
                                 <select class="form-select" id="dietType" required>
                                     <option value="omnivore">Omnivore</option>
@@ -80,6 +88,7 @@
                 const response = await fetch('/api/profile');
                 if (response.ok) {
                     const profile = await response.json();
+                    document.getElementById('language').value = profile.language || 'en';
                     document.getElementById('dietType').value = profile.dietType || 'omnivore';
                     document.getElementById('allergies').value = (profile.allergies || []).join(', ');
                     document.getElementById('dislikes').value = (profile.dislikes || []).join(', ');
@@ -97,6 +106,7 @@
             const dislikesText = document.getElementById('dislikes').value;
 
             const preferences = {
+                language: document.getElementById('language').value,
                 dietType: document.getElementById('dietType').value,
                 allergies: allergiesText ? allergiesText.split(',').map(s => s.trim()) : [],
                 dislikes: dislikesText ? dislikesText.split(',').map(s => s.trim()) : []

@@ -6,6 +6,7 @@ import com.example.weeklymealplannergpt.model.Consumer;
 import com.example.weeklymealplannergpt.model.Meal;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,9 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import org.springframework.core.io.Resource;
 import java.util.*;
 
 @Service
@@ -29,67 +33,30 @@ public class OpenAIServiceImpl implements OpenAIService {
     @Value("${openai.model}")
     private String model;
 
+    @Value("classpath:prompts/chatgpt-prompt.txt")
+    private Resource promptTemplate;
+
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     
+    @Getter
     private String lastGeneratedMessage;
 
     public OpenAIServiceImpl(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
         this.objectMapper = new ObjectMapper();
     }
-    
-    public String getLastGeneratedMessage() {
-        return lastGeneratedMessage;
-    }
 
-
-    public List<Meal> generateMealPlan(Consumer consumer) {
+    public List<Meal> generateMealPlan(Consumer consumer) throws IOException {
         return generateMealPlan(consumer, 1);
     }
 
-    public List<Meal> generateMealPlan(Consumer consumer, int weeks) {
+    public List<Meal> generateMealPlan(Consumer consumer, int weeks) throws IOException {
         int totalMeals = weeks * 5;
-        
-        String prompt = String.format("""
-                        
-                        You MUST respond ONLY with valid JSON. No markdown, no code blocks, just pure JSON starting with { and ending with }."
-                        
-                        User preferences:
-                        - Allergies: %s
-                        - Diet: %s (vegetarian/vegan/omnivore)
-                        - Dislikes: %s
-                        
-                        Create a %d-week dinner plan (%d dinners total, Monday-Friday each week).
-                        
-                        JSON format: {
-                            "meals": [
-                                {
-                                    "mealName": "Week 1 Monday - Spaghetti Bolognese",
-                                    "ingredients": ["pasta", "ground beef", "tomato sauce", "onions"],
-                                    "imgUrl": ""
-                                },
-                                {
-                                    "mealName": "Week 1 Tuesday - Chicken Stir Fry",
-                                    "ingredients": ["chicken", "vegetables", "soy sauce", "rice"],
-                                    "imgUrl": ""
-                                },
-                                ...
-                            ],
-                            "message": "Your %d-week meal plan is ready! I've created %d delicious and varied meals tailored to your preferences."
-                        }
-                        
-                        Requirements:
-                        - Avoid all listed allergies
-                        - Respect dietary restrictions (%s only)
-                        - Avoid disliked ingredients
-                        - Balanced nutrition
-                        - Variety throughout all %d weeks
-                        - Provide exactly %d dinner meals
-                        - Include a friendly confirmation message
-                        
-                        IMPORTANT: Respond with ONLY the JSON object. No markdown code blocks (```), no explanations, just the pure JSON.
-                        """,
+
+        String template = Files.readString(promptTemplate.getFile().toPath());
+        String prompt = String.format(
+                template,
                 consumer.getAllergies(),
                 consumer.getDietType(),
                 consumer.getDislikes(),
@@ -99,7 +66,8 @@ public class OpenAIServiceImpl implements OpenAIService {
                 totalMeals,
                 consumer.getDietType(),
                 weeks,
-                totalMeals);
+                totalMeals
+        );
 
         return getMealPlanFromPrompt(prompt);
     }
@@ -149,17 +117,7 @@ public class OpenAIServiceImpl implements OpenAIService {
         List<Meal> meals = new ArrayList<>();
 
         try {
-            String cleanJson = jsonContent.trim();
-            if (cleanJson.startsWith("```json")) {
-                cleanJson = cleanJson.substring(7);
-            }
-            if (cleanJson.startsWith("```")) {
-                cleanJson = cleanJson.substring(3);
-            }
-            if (cleanJson.endsWith("```")) {
-                cleanJson = cleanJson.substring(0, cleanJson.length() - 3);
-            }
-            cleanJson = cleanJson.trim();
+            String cleanJson = cleanJson(jsonContent);
 
             Map<String, Object> response = objectMapper.readValue(cleanJson, Map.class);
             List<Map<String, Object>> mealsArray = (List<Map<String, Object>>) response.get("meals");
@@ -188,5 +146,19 @@ public class OpenAIServiceImpl implements OpenAIService {
         }
 
         return meals;
+    }
+
+    private String cleanJson(String jsonContent) {
+        jsonContent = jsonContent.trim();
+        if (jsonContent.startsWith("```json")) {
+            jsonContent = jsonContent.substring(7);
+        }
+        if (jsonContent.startsWith("```")) {
+            jsonContent = jsonContent.substring(3);
+        }
+        if (jsonContent.endsWith("```")) {
+            jsonContent = jsonContent.substring(0, jsonContent.length() - 3);
+        }
+        return jsonContent;
     }
 }

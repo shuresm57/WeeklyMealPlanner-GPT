@@ -28,23 +28,31 @@ public class MealPlanServiceImpl implements MealPlanService {
     
     private static final Logger logger = LoggerFactory.getLogger(MealPlanServiceImpl.class);
 
-    @Autowired
-    private OpenAIService openAIService;
+    private final OpenAIService openAIService;
+    private final ConsumerService consumerService;
+    private final WeeklyMealPlanRepository weeklyMealPlanRepository;
+    private final MealRepository mealRepository;
+    private final MealCacheService mealCacheService;
+    private final EmailService emailService;
 
-    @Autowired
-    private ConsumerService consumerService;
+    public MealPlanServiceImpl(
+            OpenAIService openAIService,
+            ConsumerService consumerService,
+            WeeklyMealPlanRepository weeklyMealPlanRepository,
+            MealRepository mealRepository,
+            MealCacheService mealCacheService,
+            EmailService emailService) {
+        this.openAIService = openAIService;
+        this.consumerService = consumerService;
+        this.weeklyMealPlanRepository = weeklyMealPlanRepository;
+        this.mealRepository = mealRepository;
+        this.mealCacheService = mealCacheService;
+        this.emailService = emailService;
+    }
 
-    @Autowired
-    private WeeklyMealPlanRepository weeklyMealPlanRepository;
-
-    @Autowired
-    private MealRepository mealRepository;
-
-    @Autowired
-    private MealCacheService mealCacheService;
-    
-    @Autowired
-    private EmailService emailService;
+    private LocalDate getWeekStartDate(){
+        return LocalDate.now().with(java.time.DayOfWeek.MONDAY);
+    }
 
     @Transactional
     public MealPlanResponse generateWeeklyMealPlan(Consumer consumer) {
@@ -57,7 +65,7 @@ public class MealPlanServiceImpl implements MealPlanService {
     }
     
     @Transactional
-    private MealPlanResponse generateMealPlan(Consumer consumer, int weeks) {
+    protected MealPlanResponse generateMealPlan(Consumer consumer, int weeks) {
         logger.info("Generating {}-week meal plan for consumer: {}", weeks, consumer.getId());
         
         if(!consumerService.existsById(consumer.getId())) {
@@ -142,10 +150,5 @@ public class MealPlanServiceImpl implements MealPlanService {
             logger.error("Failed to send meal plan email", e);
             throw new RuntimeException("Failed to send email", e);
         }
-    }
-
-    private LocalDate getWeekStartDate() {
-        LocalDate today = LocalDate.now();
-        return today.with(ChronoField.DAY_OF_WEEK, 1);
     }
 }

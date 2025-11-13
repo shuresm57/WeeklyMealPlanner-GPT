@@ -1,5 +1,6 @@
 package com.example.weeklymealplannergpt.service.consumer;
 
+import com.example.weeklymealplannergpt.exception.ConsumerNotFoundException;
 import com.example.weeklymealplannergpt.model.Consumer;
 import com.example.weeklymealplannergpt.repository.ConsumerRepository;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,10 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     public Consumer save(Consumer consumer) {
+        validateEmail(consumer.getEmail());
+        if (consumerRepository.findByEmail(consumer.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Consumer already exists");
+        }
         return consumerRepository.save(consumer);
     }
 
@@ -40,11 +45,20 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     public void deleteById(UUID id) {
+        if (!consumerRepository.existsById(id)) {
+            throw new ConsumerNotFoundException("Consumer not found");
+        }
         consumerRepository.deleteById(id);
     }
 
     @Override
     public boolean existsById(UUID id) {
         return consumerRepository.existsById(id);
+    }
+
+    private void validateEmail(String email) {
+        if (email == null || email.isEmpty()) {
+            throw new IllegalArgumentException("Email can not be null or empty");
+        }
     }
 }

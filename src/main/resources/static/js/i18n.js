@@ -55,12 +55,30 @@ function updateTranslations() {
 }
 
 // Set language
-function setLanguage(lang) {
+async function setLanguage(lang) {
     currentLang = lang;
     document.documentElement.setAttribute('lang', currentLang);
     localStorage.setItem('lang', currentLang);
     updateTranslations();
     updateLanguageButtons();
+    
+    // Save to backend
+    try {
+        await ensureCsrfToken();
+        const csrfToken = getCsrfToken();
+        
+        await fetch('/api/profile/preferences', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-XSRF-TOKEN': csrfToken
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ language: lang })
+        });
+    } catch (error) {
+        console.error('Error saving language preference:', error);
+    }
 }
 
 // Update language button states

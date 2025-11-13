@@ -7,6 +7,11 @@ async function loadProfile() {
             document.getElementById('userName').textContent = profile.name || 'User';
             document.getElementById('userEmail').textContent = profile.email || '';
             
+            // Load saved language preference
+            if (profile.language) {
+                setLanguage(profile.language);
+            }
+            
             document.getElementById('profileSkeleton').style.display = 'none';
             document.getElementById('profileContent').style.display = 'block';
             
