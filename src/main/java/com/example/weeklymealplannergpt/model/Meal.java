@@ -24,7 +24,7 @@ public class Meal {
     private Long id;
     private String mealName, imgUrl;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<String> ingredients;
 
     /**

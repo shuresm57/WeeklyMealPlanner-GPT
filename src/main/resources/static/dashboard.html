@@ -15,8 +15,13 @@
             <a class="navbar-brand fw-bold" href="dashboard.html">
                 <i class="bi bi-calendar-check text-primary"></i> Meal Planner
             </a>
-            <div class="d-flex gap-2">
-                <!-- Theme toggle removed - dark mode only -->
+            <div class="d-flex gap-2 align-items-center">
+                <span class="text-muted small d-none d-md-inline" id="navUserName">Loading...</span>
+                <form action="/logout" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </button>
+                </form>
             </div>
         </div>
     </nav>

@@ -33,7 +33,7 @@ public class WeeklyMealPlan {
     @JoinColumn(name = "consumer_id")
     private Consumer consumer;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Meal> meals;
 
 }

@@ -54,7 +54,7 @@ public class OpenAIServiceImpl implements OpenAIService {
     public List<Meal> generateMealPlan(Consumer consumer, int weeks) throws IOException {
         int totalMeals = weeks * 5;
 
-        String template = Files.readString(promptTemplate.getFile().toPath());
+        String template = new String(promptTemplate.getInputStream().readAllBytes());
         String prompt = String.format(
                 template,
                 consumer.getAllergies(),

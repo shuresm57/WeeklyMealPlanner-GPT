@@ -7,6 +7,12 @@ async function loadProfile() {
             document.getElementById('userName').textContent = profile.name || 'User';
             document.getElementById('userEmail').textContent = profile.email || '';
             
+            // Update navbar user name if element exists
+            const navUserName = document.getElementById('navUserName');
+            if (navUserName) {
+                navUserName.textContent = profile.name || 'User';
+            }
+            
             document.getElementById('profileSkeleton').style.display = 'none';
             document.getElementById('profileContent').style.display = 'block';
             

@@ -14,9 +14,16 @@
             <a class="navbar-brand fw-bold" href="dashboard.html">
                 <i class="bi bi-calendar-check text-primary"></i> Meal Planner
             </a>
-            <a href="dashboard.html" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Back
-            </a>
+            <div class="d-flex gap-2">
+                <a href="dashboard.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+                <form action="/logout" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </button>
+                </form>
+            </div>
         </div>
     </nav>
 

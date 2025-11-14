@@ -2,9 +2,9 @@ name: Quality Assurance
 
 on:
   push:
-    branches: [ qa ]
+    branches: [ main, qa ]
   pull_request:
-    branches: [ qa ]
+    branches: [ main, qa ]
 
 jobs:
   test-and-coverage:

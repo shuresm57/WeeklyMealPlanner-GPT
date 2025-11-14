@@ -276,6 +276,22 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
+/* Login page styles */
+.bg-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.btn-outline-dark {
+    border-width: 2px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-dark:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 /* Smooth Transitions */
 * {
     transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
