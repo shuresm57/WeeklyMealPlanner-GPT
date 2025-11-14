@@ -11,6 +11,18 @@ jobs:
     name: Run Tests and Generate Coverage
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: testpass
+          MYSQL_DATABASE: weeklymealplanner
+          MYSQL_USER: testuser
+          MYSQL_PASSWORD: testpass
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,6 +38,11 @@ jobs:
         run: ./mvnw versions:use-latest-releases -Dincludes=com.example:* || true
 
       - name: Run tests with coverage
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/weeklymealplanner
+          SPRING_DATASOURCE_USERNAME: testuser
+          SPRING_DATASOURCE_PASSWORD: testpass
+          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
         run: ./mvnw clean verify jacoco:report
 
       - name: Upload Jacoco coverage report
