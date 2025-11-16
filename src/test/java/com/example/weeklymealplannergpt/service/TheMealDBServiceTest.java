@@ -1,6 +1,7 @@
 package com.example.weeklymealplannergpt.service;
 
 import com.example.weeklymealplannergpt.dto.TheMealDbResponse;
+import com.example.weeklymealplannergpt.service.mealplan.MealCacheService;
 import com.example.weeklymealplannergpt.service.mealplan.TheMealDbServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +23,9 @@ public class TheMealDBServiceTest {
 
     @Mock
     private RestTemplate restTemplate;
+
+    @Mock
+    private MealCacheService mealCacheService;
 
     @InjectMocks
     private TheMealDbServiceImpl mealDbService;
