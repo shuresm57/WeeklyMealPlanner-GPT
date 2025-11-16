@@ -33,7 +33,12 @@ public class WeeklyMealPlan {
     @JoinColumn(name = "consumer_id")
     private Consumer consumer;
 
-    @OneToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH}, fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "weekly_meal_plan_meals",
+        joinColumns = @JoinColumn(name = "weekly_meal_plan_id"),
+        inverseJoinColumns = @JoinColumn(name = "meal_id")
+    )
     private List<Meal> meals;
 
 }
