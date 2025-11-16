@@ -47,14 +47,19 @@ public class MealPlanController {
         if (plan == null) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(plan);
+        return ResponseEntity.ok()
+                .header("Cache-Control", "private, max-age=300")
+                .body(plan);
     }
 
     @GetMapping("/history")
-    public List<WeeklyMealPlan> getPlanHistory(@AuthenticationPrincipal OAuth2User principal) {
+    public ResponseEntity<List<WeeklyMealPlan>> getPlanHistory(@AuthenticationPrincipal OAuth2User principal) {
         String email = principal.getAttribute("email");
         Consumer consumer = consumerService.findByEmail(email);
-        return mealPlanService.getPlanHistory(consumer.getId());
+        List<WeeklyMealPlan> history = mealPlanService.getPlanHistory(consumer.getId());
+        return ResponseEntity.ok()
+                .header("Cache-Control", "private, max-age=300")
+                .body(history);
     }
     
     @PostMapping("/{mealPlanId}/email")

@@ -1,0 +1,14 @@
+networks:
+    backend-network:
+        driver: bridge
+services:
+  backend:
+    image: ghcr.io/${GITHUB_REPOSITORY}:latest
+    container_name: weeklymealplanner-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=mysql
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}

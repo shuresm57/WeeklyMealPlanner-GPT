@@ -3,8 +3,21 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 async function loadCurrentMealPlan() {
     try {
+        const cached = CacheService.get('current_mealplan');
+        if (cached) {
+            displayMealPlan(cached);
+            document.getElementById('mealPlanSkeleton').style.display = 'none';
+            return;
+        }
+
         const response = await fetch('/api/mealplan/current');
-        response.status === 204 || !response.ok ? showEmptyState() : displayMealPlan(await response.json());
+        if (response.status === 204 || !response.ok) {
+            showEmptyState();
+        } else {
+            const data = await response.json();
+            CacheService.set('current_mealplan', data);
+            displayMealPlan(data);
+        }
     } catch (error) {
         console.error('Error loading meal plan:', error);
         showEmptyState();
@@ -68,7 +81,11 @@ async function generateMealPlan() {
         });
 
         if (response.ok) {
-            displayMealPlan(await response.json());
+            const data = await response.json();
+            CacheService.invalidate('current_mealplan');
+            CacheService.invalidate('mealplan_history');
+            CacheService.set('current_mealplan', data);
+            displayMealPlan(data);
             loadHistory();
         } else {
             alert((await response.json()).message || 'Failed to generate meal plan');

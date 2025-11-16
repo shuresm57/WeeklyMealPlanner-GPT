@@ -31,6 +31,6 @@ You MUST respond ONLY with valid JSON. No markdown, no code blocks, just pure JS
                         - Balanced nutrition
                         - Variety throughout all %d weeks
                         - Provide exactly %d dinner meals
-                        - Include a friendly confirmation message, starting with "Hi [consumer name], here's a weekly meal plan crafted just for you!"
+                        - Include a friendly confirmation message, starting with "Hi here's a weekly meal plan crafted just for you!"
 
                         IMPORTANT: Respond with ONLY the JSON object. No markdown code blocks (```), no explanations, just the pure JSON.

@@ -1,9 +1,17 @@
 // Load history
 async function loadHistory() {
     try {
+        const cached = CacheService.get('mealplan_history');
+        if (cached) {
+            displayHistory(cached);
+            document.getElementById('historySkeleton').style.display = 'none';
+            return;
+        }
+
         const response = await fetch('/api/mealplan/history');
         if (response.ok) {
             const history = await response.json();
+            CacheService.set('mealplan_history', history);
             displayHistory(history);
         }
     } catch (error) {
