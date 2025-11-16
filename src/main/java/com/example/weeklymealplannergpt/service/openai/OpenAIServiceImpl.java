@@ -77,7 +77,7 @@ public class OpenAIServiceImpl implements OpenAIService {
             OpenAIRequest request = new OpenAIRequest();
             request.setModel(model);
             request.setTemperature(0.7);
-            request.setMax_tokens(1000);
+            request.setMax_tokens(4000);
             
             List<OpenAIRequest.Message> messages = new ArrayList<>();
             messages.add(new OpenAIRequest.Message("system", 
