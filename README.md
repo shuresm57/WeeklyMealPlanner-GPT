@@ -22,7 +22,6 @@ Systemet integrerer med TheMealDB for at hente opskrifter og billeder af retter,
 - Brugerprofiler med gemte præferencer
 
 ### Madplangenerering
-- AI-drevet generering af ugentlige madplaner
 - AI-drevet generering af månedlige madplaner (4 ugers planer)
 - Personalisering baseret på allergier, kosttype og afvisninger
 - Caching af genererede måltider for forbedret performance
