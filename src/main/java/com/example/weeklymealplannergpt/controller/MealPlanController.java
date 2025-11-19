@@ -28,14 +28,11 @@ public class MealPlanController {
     public MealPlanResponse generateMealPlan(
             @AuthenticationPrincipal OAuth2User principal,
             @RequestParam(defaultValue = "monthly") String type) {
+
         String email = principal.getAttribute("email");
         Consumer consumer = consumerService.findByEmail(email);
-        
-        if ("weekly".equalsIgnoreCase(type)) {
-            return mealPlanService.generateWeeklyMealPlan(consumer);
-        } else {
-            return mealPlanService.generateMonthlyMealPlan(consumer);
-        }
+
+        return mealPlanService.generateMonthlyMealPlan(consumer);
     }
 
     @GetMapping("/current")
