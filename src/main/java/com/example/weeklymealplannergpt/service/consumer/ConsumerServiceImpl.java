@@ -21,7 +21,6 @@ public class ConsumerServiceImpl implements ConsumerService {
     @Override
     public Consumer save(Consumer consumer) {
         validateEmail(consumer.getEmail());
-        // Only check for duplicates if this is a new consumer (no ID set)
         if (consumer.getId() == null && consumerRepository.findByEmail(consumer.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Consumer already exists");
         }
@@ -36,7 +35,7 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     public Optional<Consumer> findById(UUID id) {
-        return consumerRepository.findById(id);
+        return Optional.ofNullable(consumerRepository.findById(id).orElseThrow(() -> new ConsumerNotFoundException("Consumer not found")));
     }
 
     @Override
