@@ -5,6 +5,7 @@ import com.example.weeklymealplannergpt.model.Consumer;
 import com.example.weeklymealplannergpt.model.WeeklyMealPlan;
 import com.example.weeklymealplannergpt.service.consumer.ConsumerService;
 import com.example.weeklymealplannergpt.service.mealplan.MealPlanService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -21,6 +22,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -40,13 +42,19 @@ class MealPlanControllerTest {
     @MockitoBean
     private ClientRegistrationRepository clientRegistrationRepository;
 
+    private Consumer consumer;
+    private MealPlanResponse response;
+
+    @BeforeEach
+    void setUp() {
+        consumer = createTestConsumer();
+        WeeklyMealPlan plan = new WeeklyMealPlan();
+        response = new MealPlanResponse(plan, "Plan created successfully");
+    }
+
     @Test
     void generateMealPlan_createsMonthlyPlan() throws Exception {
         // Arrange
-        Consumer consumer = createTestConsumer();
-        WeeklyMealPlan plan = new WeeklyMealPlan();
-        MealPlanResponse response = new MealPlanResponse(plan, "Plan created successfully");
-
         when(consumerService.findByEmail(anyString())).thenReturn(consumer);
         when(mealPlanService.generateMonthlyMealPlan(any(Consumer.class))).thenReturn(response);
 
@@ -59,6 +67,20 @@ class MealPlanControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Plan created successfully"))
                 .andExpect(jsonPath("$.mealPlan").exists());
+    }
+
+    @Test
+    void getCurrentWeekPlan_returnsOK() throws Exception {
+        when(consumerService.findByEmail(anyString())).thenReturn(consumer);
+        when(mealPlanService.getCurrentWeekPlan(any(UUID.class))).thenReturn(new WeeklyMealPlan());
+
+        mockMvc.perform(
+                        get("/api/mealplan/current")
+                                .with(oauth2Login()
+                                        .attributes(attrs -> attrs.put("email", "test@example.com")))
+                                .with(csrf())
+                )
+                .andExpect(status().isOk());
     }
 
     private Consumer createTestConsumer() {
