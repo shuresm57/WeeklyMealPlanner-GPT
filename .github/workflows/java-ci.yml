@@ -26,14 +26,16 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
+          cache: "maven"
 
       - name: Ensure Maven dependencies
         run: mvn dependency:resolve
 
-      - uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: maven-${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+# when you need full control over what gets cached and when the cache should be reused or discarded.
+#      - uses: actions/cache@v4
+#        with:
+#          path: ~/.m2/repository
+#          key: maven-${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
 
       - name: Build Docker image
         run: docker build . --tag weeklymealplanner:test
